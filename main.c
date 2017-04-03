@@ -253,13 +253,6 @@ int main(int argc, char **argv) {
     MatrixPNG matrix = initPngMatrix(master_png.main, master_png.info);
     MatrixPNG matrix_copy = matrix_png_copy(matrix, master_png.main, master_png.info);
     printf("W: %d, H: %d\n", matrix->cols, matrix->rows);
-    // for(int x = 0; x < matrix_copy->rows; x++) {
-    //     for(int y = 0; y < matrix_copy->cols; y++) {
-    //         png_bytep px = png_pixel(matrix_copy, x, y);
-    //         px[0] = 100;
-    //         printf("[ %d - %d ] = RGBA(%3d, %3d, %3d, %3d)\n", x + 1, y + 1, px[0], px[1], px[2], px[3]);
-    //     }
-    // }
     gauss_blur(matrix, matrix_copy, 4, 7);
     write_png_file("out.png", matrix_copy);
     fclose(fp);
