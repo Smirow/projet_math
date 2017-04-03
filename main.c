@@ -160,30 +160,42 @@ MatrixPNG matrix_png_copy(MatrixPNG png_matrix, png_structp png_ptr, png_infop i
 
 void gauss_blur(MatrixPNG png_matrix, MatrixPNG png_matrix_copy, int sigma, int mu) {
     png_bytep px;
+    int current_x, current_y;
     double resR = 0.0, resG = 0.0, resB = 0.0, resA = 0.0, sum = 0.0;
     Matrix_filter filter_matrix = gauss_filter(sigma, mu);
     for(int x = 0; x < png_matrix->rows; x++) {
         for(int y = 0; y < png_matrix->cols; y++) {
-            if (x > mu/2 && y > mu/2 && (y < png_matrix->cols - mu/2) && (x < png_matrix->rows - mu/2)) {
-                for (int i = - mu/2; i <= mu/2; i++) {
-                    for (int j = - mu/2; j <= mu/2; j++) {
-                        px = png_pixel(png_matrix, x + i, y + j);
-                        sum += filter_matrix->mat[i + mu/2][j + mu/2];
-                        resR += filter_matrix->mat[i + mu/2][j + mu/2] * px[0];
-                        resG += filter_matrix->mat[i + mu/2][j + mu/2] * px[1];
-                        resB += filter_matrix->mat[i + mu/2][j + mu/2] * px[2];
-                        resA += filter_matrix->mat[i + mu/2][j + mu/2] * px[3];
-                    }
-                }
-                px = png_pixel(png_matrix_copy, x, y);
-                px[0] = resR/sum;
-                px[1] = resG/sum;
-                px[2] = resB/sum;
-                px[3] = resA/sum;
-            }
-            else if (x < mu/2 && y < mu/2) {
+            for (int i = - mu/2; i <= mu/2; i++) {
+                for (int j = - mu/2; j <= mu/2; j++) {
 
+                    current_x = x + i;
+                    current_y = y + j;
+
+                    if (x + i < 0)
+                        current_x = 0;
+                    if (y + j < 0)
+                        current_y = 0;
+                    if (x + i >= png_matrix->rows)
+                        current_x = png_matrix->rows - 1;
+                    if (y + j >= png_matrix->cols)
+                        current_y = png_matrix->cols - 1;
+
+                    px = png_pixel(png_matrix, current_x, current_y);
+
+                    sum += filter_matrix->mat[i + mu/2][j + mu/2];
+                    resR += filter_matrix->mat[i + mu/2][j + mu/2] * px[0];
+                    resG += filter_matrix->mat[i + mu/2][j + mu/2] * px[1];
+                    resB += filter_matrix->mat[i + mu/2][j + mu/2] * px[2];
+                    resA += filter_matrix->mat[i + mu/2][j + mu/2] * px[3];
+                }
             }
+            px = png_pixel(png_matrix_copy, x, y);
+
+            px[0] = resR / sum;
+            px[1] = resG / sum;
+            px[2] = resB / sum;
+            px[3] = resA / sum;
+            
             resR = 0.0, resG = 0.0, resB = 0.0, resA = 0.0, sum = 0.0;
         }
     }
@@ -248,7 +260,7 @@ int main(int argc, char **argv) {
     //         printf("[ %d - %d ] = RGBA(%3d, %3d, %3d, %3d)\n", x + 1, y + 1, px[0], px[1], px[2], px[3]);
     //     }
     // }
-    gauss_blur(matrix, matrix_copy, 4, 9);
+    gauss_blur(matrix, matrix_copy, 4, 7);
     write_png_file("out.png", matrix_copy);
     fclose(fp);
     return 0;
