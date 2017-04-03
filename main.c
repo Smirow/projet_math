@@ -71,7 +71,7 @@ png_infop png_inf(png_structp png_ptr) {
     if(png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
         png_set_tRNS_to_alpha(png_ptr);
 
-  // These color_type don't have an alpha channel then fill it with 0xff.
+    // These color_type don't have an alpha channel then fill it with 0xff.
     if(color_type == PNG_COLOR_TYPE_RGB ||
         color_type == PNG_COLOR_TYPE_GRAY ||
         color_type == PNG_COLOR_TYPE_PALETTE)
@@ -157,10 +157,11 @@ MatrixPNG matrix_png_copy(MatrixPNG png_matrix, png_structp png_ptr, png_infop i
     return png_matrix_copy;
 }
 
-void gauss_blur(MatrixPNG png_matrix, MatrixPNG png_matrix_copy, int sigma, int mu) {
+MatrixPNG gauss_blur(MatrixPNG png_matrix, Master_png master_png, int sigma, int mu) {
     png_bytep px;
     int current_x, current_y;
     double resR = 0.0, resG = 0.0, resB = 0.0, resA = 0.0, sum = 0.0;
+    MatrixPNG png_matrix_copy = matrix_png_copy(png_matrix, master_png.main, master_png.info);
     Matrix_filter filter_matrix = gauss_filter(sigma, mu);
     for(int x = 0; x < png_matrix->rows; x++) {
         for(int y = 0; y < png_matrix->cols; y++) {
@@ -197,6 +198,7 @@ void gauss_blur(MatrixPNG png_matrix, MatrixPNG png_matrix_copy, int sigma, int 
             resR = 0.0, resG = 0.0, resB = 0.0, resA = 0.0, sum = 0.0;
         }
     }
+    return png_matrix_copy;
 }
 
 void write_png_file(char* filename, MatrixPNG matrix) {
@@ -247,10 +249,9 @@ int main(int argc, char **argv) {
     if (!fp)
         abort_("[read_png_file] File %s could not be opened for reading", argv[1]);
     Master_png master_png = init_master_png(fp);
-    MatrixPNG matrix = initPngMatrix(master_png.main, master_png.info);
-    MatrixPNG matrix_copy = matrix_png_copy(matrix, master_png.main, master_png.info);
+    MatrixPNG matrix = initPngMatrix(master_png.main, master_png.info);   
     printf("W: %d, H: %d\n", matrix->cols, matrix->rows);
-    gauss_blur(matrix, matrix_copy, 4, 7);
+    MatrixPNG matrix_copy = gauss_blur(matrix, master_png, 4, 7);
     write_png_file("out.png", matrix_copy);
     fclose(fp);
     return 0;
