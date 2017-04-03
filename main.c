@@ -128,9 +128,9 @@ Matrix_filter gauss_filter(int sigma, int mu) {
     filter->rows = mu;
     filter->cols = mu;
     filter->mat = (double**) calloc(mu, sizeof(double*));
-    for (int i = 0; i < mu; i++) {
+    for (int i = 0; i < mu; i++)
         filter->mat[i] = (double*) calloc(mu, sizeof(double));
-    }
+
     for (int i = 0; i < mu; i++) {
         for (int j = 0; j < mu; j++) {
             x = j - mu/2;
@@ -151,9 +151,8 @@ MatrixPNG matrix_png_copy(MatrixPNG png_matrix, png_structp png_ptr, png_infop i
         png_matrix_copy->mat[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr, info_ptr));
 
     for(int x = 0; x < png_matrix_copy->rows; x++) {
-        for(int y = 0; y < png_matrix_copy->cols * 4; y++) {
+        for(int y = 0; y < png_matrix_copy->cols * 4; y++)
             png_matrix_copy->mat[x][y] = png_matrix->mat[x][y];
-         }
     }
     return png_matrix_copy;
 }
@@ -167,7 +166,6 @@ void gauss_blur(MatrixPNG png_matrix, MatrixPNG png_matrix_copy, int sigma, int 
         for(int y = 0; y < png_matrix->cols; y++) {
             for (int i = - mu/2; i <= mu/2; i++) {
                 for (int j = - mu/2; j <= mu/2; j++) {
-
                     current_x = x + i;
                     current_y = y + j;
 
@@ -225,8 +223,7 @@ void write_png_file(char* filename, MatrixPNG matrix) {
     PNG_COMPRESSION_TYPE_DEFAULT,
     PNG_FILTER_TYPE_DEFAULT
     );
-    
-    
+        
     png_write_info(png, info);
 
     png_write_image(png, matrix->mat);
@@ -238,9 +235,9 @@ void write_png_file(char* filename, MatrixPNG matrix) {
 
 void print_matrix(Matrix_filter matrix, int rows, int cols) {
     for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
+        for (int j = 0; j < cols; j++)
             printf("%f ", matrix->mat[i][j]);
-        }
+        
         printf("\n");
     }
 }
