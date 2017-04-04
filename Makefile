@@ -22,6 +22,7 @@ $(COBJ): $(CSRC) $(CHDR) $(OBJDIR)
 	$(CC) $(CFLAGS) -o $(OBJDIR)/utils.o -c $(SRCDIR)/utils.c
 	$(CC) $(CFLAGS) -o $(OBJDIR)/png_struct_manager.o -c $(SRCDIR)/png_struct_manager.c
 	$(CC) $(CFLAGS) -o $(OBJDIR)/gauss.o -c $(SRCDIR)/gauss.c
+	$(CC) $(CFLAGS) -o $(OBJDIR)/derivate.o -c $(SRCDIR)/derivate.c
 	$(CC) $(CFLAGS) -o $(OBJDIR)/main.o -c $(SRCDIR)/main.c
 
 $(OBJDIR):
