@@ -1,4 +1,4 @@
-
+/* ABOU ALI Magued, Avril 2017 */
 
 typedef struct struct_matrix_filter {
     double** mat;

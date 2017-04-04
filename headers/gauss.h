@@ -1,3 +1,4 @@
+/* ABOU ALI Magued, Avril 2017 */
 
 #define PNG_DEBUG 3
 #ifndef M_PI
