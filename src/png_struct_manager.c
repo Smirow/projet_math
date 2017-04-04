@@ -6,34 +6,9 @@
 #include <png.h>
 #include <stdarg.h>
 
-#define PNG_DEBUG 3
-#ifndef M_PI
- #define M_PI 3.14
-#endif 
 
-typedef struct struct_matrix_filter {
-    double** mat;
-    int rows, cols;
-} *Matrix_filter;
-
-typedef struct struct_matrix_png {
-    png_bytep* mat;
-    int rows, cols;
-} *MatrixPNG;
-
-typedef struct struct_png_master {
-    png_structp main;
-    png_infop info;
-} Master_png;
-
-void abort_(const char * s, ...) {
-    va_list args;
-    va_start(args, s);
-    vfprintf(stderr, s, args);
-    fprintf(stderr, "\n");
-    va_end(args);
-    exit(1);
-}
+#include "../headers/utils.h"
+#include "../headers/png_struct_manager.h"
 
 png_structp pngToPng_Structp(FILE *fp) {
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -93,6 +68,7 @@ Master_png init_master_png(FILE *fp) {
     return master;
 } 
 
+
 int png_width(png_structp png_ptr, png_infop info_ptr) {    
     return png_get_image_width(png_ptr, info_ptr);
 }
@@ -122,25 +98,6 @@ png_bytep png_pixel(MatrixPNG matrix, int x, int y) {
     return &(matrix->mat[x][y * 4]);
 }
 
-Matrix_filter gauss_filter(int sigma, int mu) {
-    int x, y;
-    Matrix_filter filter =  (Matrix_filter) malloc(sizeof(Matrix_filter));
-    filter->rows = mu;
-    filter->cols = mu;
-    filter->mat = (double**) calloc(mu, sizeof(double*));
-    for (int i = 0; i < mu; i++)
-        filter->mat[i] = (double*) calloc(mu, sizeof(double));
-
-    for (int i = 0; i < mu; i++) {
-        for (int j = 0; j < mu; j++) {
-            x = j - mu/2;
-            y = i - mu/2;
-            filter->mat[i][j] = (double) (1. / (2. * M_PI * sigma * sigma)) * exp(-(x * x + y * y) / (2* sigma * sigma));
-        }
-    }
-    return filter;
-}
-
 MatrixPNG matrix_png_copy(MatrixPNG png_matrix, png_structp png_ptr, png_infop info_ptr) {
     MatrixPNG png_matrix_copy = (MatrixPNG) malloc(sizeof(MatrixPNG));
     png_matrix_copy->rows = png_matrix->rows;
@@ -153,50 +110,6 @@ MatrixPNG matrix_png_copy(MatrixPNG png_matrix, png_structp png_ptr, png_infop i
     for(int x = 0; x < png_matrix_copy->rows; x++) {
         for(int y = 0; y < png_matrix_copy->cols * 4; y++)
             png_matrix_copy->mat[x][y] = png_matrix->mat[x][y];
-    }
-    return png_matrix_copy;
-}
-
-MatrixPNG gauss_blur(MatrixPNG png_matrix, Master_png master_png, int sigma, int mu) {
-    png_bytep px;
-    int current_x, current_y;
-    double resR = 0.0, resG = 0.0, resB = 0.0, resA = 0.0, sum = 0.0;
-    MatrixPNG png_matrix_copy = matrix_png_copy(png_matrix, master_png.main, master_png.info);
-    Matrix_filter filter_matrix = gauss_filter(sigma, mu);
-    for(int x = 0; x < png_matrix->rows; x++) {
-        for(int y = 0; y < png_matrix->cols; y++) {
-            for (int i = - mu/2; i <= mu/2; i++) {
-                for (int j = - mu/2; j <= mu/2; j++) {
-                    current_x = x + i;
-                    current_y = y + j;
-
-                    if (x + i < 0)
-                        current_x = 0;
-                    if (y + j < 0)
-                        current_y = 0;
-                    if (x + i >= png_matrix->rows)
-                        current_x = png_matrix->rows - 1;
-                    if (y + j >= png_matrix->cols)
-                        current_y = png_matrix->cols - 1;
-
-                    px = png_pixel(png_matrix, current_x, current_y);
-
-                    sum += filter_matrix->mat[i + mu/2][j + mu/2];
-                    resR += filter_matrix->mat[i + mu/2][j + mu/2] * px[0];
-                    resG += filter_matrix->mat[i + mu/2][j + mu/2] * px[1];
-                    resB += filter_matrix->mat[i + mu/2][j + mu/2] * px[2];
-                    resA += filter_matrix->mat[i + mu/2][j + mu/2] * px[3];
-                }
-            }
-            px = png_pixel(png_matrix_copy, x, y);
-
-            px[0] = resR / sum;
-            px[1] = resG / sum;
-            px[2] = resB / sum;
-            px[3] = resA / sum;
-            
-            resR = 0.0, resG = 0.0, resB = 0.0, resA = 0.0, sum = 0.0;
-        }
     }
     return png_matrix_copy;
 }
@@ -232,34 +145,4 @@ void write_png_file(char* filename, MatrixPNG matrix) {
     png_write_end(png, NULL);
 
     fclose(fp);
-}
-
-
-void print_matrix(Matrix_filter matrix, int rows, int cols) {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++)
-            printf("%f ", matrix->mat[i][j]);
-        
-        printf("\n");
-    }
-}
-
-int main(int argc, char **argv) {
-    if (argc != 3)
-        abort_("usage: ./a.out png_source_file png_dest_filename");
-
-    FILE *fp = fopen(argv[1], "rb");
-    if (!fp)
-        abort_("[read_png_file] File %s could not be opened for reading", argv[1]);
-    
-    Master_png master_png = init_master_png(fp);
-    MatrixPNG matrix = initPngMatrix(master_png.main, master_png.info);
-    printf("W: %d, H: %d\n", matrix->cols, matrix->rows);
-
-    MatrixPNG matrix_copy = gauss_blur(matrix, master_png, 4, 7);
-    write_png_file(argv[2],  matrix_copy);
-
-    fclose(fp);
-
-    return 0;
 }
