@@ -3,13 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <png.h>
 #include <stdarg.h>
 
 #define PNG_DEBUG 3
 #ifndef M_PI
  #define M_PI 3.14
 #endif 
-#include <png.h>
 
 typedef struct struct_matrix_filter {
     double** mat;
