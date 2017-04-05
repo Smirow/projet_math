@@ -81,6 +81,7 @@ MatrixPNG matrix_dt(Master_png master_png, MatrixPNG png_matrix, MatrixPNG png_m
     return png_matrix_copy;
 }
 
+
 void free_png_bytep(png_bytep px) {
     free(px);
 }

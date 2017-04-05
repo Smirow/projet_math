@@ -33,11 +33,14 @@ int main(int argc, char **argv) {
     MatrixPNG matrix_two = initPngMatrix(master_png_two.main, master_png_two.info);
     printf("W: %d, H: %d\n", matrix->cols, matrix->rows);
 
+    // Gauss Blur
     MatrixPNG matrix_copy = gauss_blur(matrix, master_png, 4, 9);
     MatrixPNG matrix_copy_two = gauss_blur(matrix_two, master_png_two, 4, 9);
     
-    // write_png_file(argv[3],  matrix_copy);
+    write_png_file("Venus10_Gauss_Blur.png",  matrix_copy);
+    write_png_file("Venus11_Gauss_Blur.png",  matrix_copy_two);
 
+    // Derivate
     matrix_dx(matrix, master_png);
     matrix_dy(matrix, master_png);
     matrix_dt(master_png, matrix_copy, matrix_copy_two);
